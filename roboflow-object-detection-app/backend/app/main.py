@@ -6,11 +6,22 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.api import api_router
 
+# =========================
+# PATHS
+# =========================
+
 ROOT_DIR = Path(__file__).resolve().parents[2]
-STATIC_DIR = ROOT_DIR / "backend" / "app" / "static"
-FRONTEND_DIR = ROOT_DIR / "frontend"
+STATIC_DIR = ROOT_DIR / "app" / "static"
+
+# =========================
+# APP
+# =========================
 
 app = FastAPI()
+
+# =========================
+# CORS
+# =========================
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,16 +31,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# =========================
+# STATIC FILES (FIX REAL)
+# =========================
+
 app.mount(
     "/static",
     StaticFiles(directory=str(STATIC_DIR)),
     name="static"
 )
 
-app.include_router(api_router)
+# =========================
+# ROUTES
+# =========================
 
-app.mount(
-    "/static",
-    StaticFiles(directory="app/static"),
-    name="static"
-)
+app.include_router(api_router)
