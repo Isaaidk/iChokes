@@ -1,4 +1,4 @@
-const API_URL = "";
+const API_URL = "https://ichokes-production.up.railway.app"
 
 const dropZone =
     document.getElementById(
@@ -167,7 +167,7 @@ function renderImage(data) {
     const img = new Image();
 
     img.src =
-        `${API_URL}/${data.output_path}`;
+        `${API_URL}${data.output_path}`;
 
     img.onload = () => {
 
@@ -197,7 +197,7 @@ function renderImage(data) {
 function renderVideo(data) {
 
     videoPlayer.src =
-        `${API_URL}/${data.video_url}`;
+        `${API_URL}${data.video_url}`;
 
     videoPlayer.classList.remove(
         "hidden"

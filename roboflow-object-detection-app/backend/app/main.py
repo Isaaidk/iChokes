@@ -29,7 +29,7 @@ app.mount(
 app.include_router(api_router)
 
 app.mount(
-    "/",
-    StaticFiles(directory=str(FRONTEND_DIR), html=True),
-    name="frontend"
+    "/static",
+    StaticFiles(directory="app/static"),
+    name="static"
 )

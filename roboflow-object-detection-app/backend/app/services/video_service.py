@@ -241,6 +241,5 @@ async def process_video(
 
         "success": True,
 
-        "video_url":
-            f"static/outputs/{filename}.mp4"
+        "video_url": f"/static/outputs/{filename}.mp4"
     }

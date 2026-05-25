@@ -96,13 +96,9 @@ async def process_image(
         # =========================
 
         return {
-
             "success": True,
-
             "predictions": predictions,
-
-            "output_path":
-                f"static/outputs/{filename}.jpg"
+            "output_path": f"/static/outputs/{filename}.jpg"
         }
 
     except Exception as e:
