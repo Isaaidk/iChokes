@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-multipart
+opencv-python-headless
+numpy
+python-dotenv
+inference-sdk
+websockets
+aiofiles
+jinja2
+loguru
+pydantic-settings
