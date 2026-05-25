@@ -1,10 +1,14 @@
+from pathlib import Path
+
 from fastapi import FastAPI
-
 from fastapi.middleware.cors import CORSMiddleware
-
 from fastapi.staticfiles import StaticFiles
 
 from app.api.api import api_router
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+STATIC_DIR = ROOT_DIR / "backend" / "app" / "static"
+FRONTEND_DIR = ROOT_DIR / "frontend"
 
 app = FastAPI()
 
@@ -18,15 +22,14 @@ app.add_middleware(
 
 app.mount(
     "/static",
-    StaticFiles(directory="app/static"),
+    StaticFiles(directory=str(STATIC_DIR)),
     name="static"
 )
 
 app.include_router(api_router)
 
-@app.get("/")
-async def root():
-
-    return {
-        "status": "running"
-    }
+app.mount(
+    "/",
+    StaticFiles(directory=str(FRONTEND_DIR), html=True),
+    name="frontend"
+)
