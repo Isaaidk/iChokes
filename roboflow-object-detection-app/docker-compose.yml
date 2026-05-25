@@ -1,0 +1,29 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: roboflow-backend
+    env_file:
+      - ./backend/.env
+    volumes:
+      - backend-uploads:/usr/src/app/app/static/uploads
+      - backend-outputs:/usr/src/app/app/static/outputs
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: roboflow-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  backend-uploads:
+  backend-outputs:

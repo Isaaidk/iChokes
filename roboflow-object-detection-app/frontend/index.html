@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Roboflow AI Detection
+    </title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+        rel="stylesheet"
+        href="styles.css">
+
+</head>
+
+<body class="bg-zinc-950 text-white min-h-screen overflow-x-hidden">
+
+    <div class="container mx-auto px-6 py-10">
+
+        <div class="flex items-center justify-between mb-10">
+
+            <div>
+
+                <h1 class="text-5xl font-black text-cyan-400">
+                    AI Object Detection
+                </h1>
+
+                <p class="text-zinc-400 mt-3">
+                    FastAPI + Roboflow + OpenCV
+                </p>
+
+            </div>
+
+        </div>
+
+        <div
+            id="dropZone"
+            class="relative border-2 border-dashed border-zinc-700 hover:border-cyan-400 transition-all duration-300 rounded-3xl p-20 text-center cursor-pointer bg-zinc-900/50 backdrop-blur">
+
+            <div class="space-y-4">
+
+                <div class="text-7xl">
+                    📤
+                </div>
+
+                <h2 class="text-3xl font-bold">
+                    Upload Image or Video
+                </h2>
+
+                <p class="text-zinc-400">
+                    Drag & Drop or Click
+                </p>
+
+            </div>
+
+        </div>
+
+        <input
+            type="file"
+            id="fileInput"
+            accept="image/*,video/*"
+            class="hidden">
+
+        <div
+            id="loading"
+            class="hidden flex justify-center items-center mt-10">
+
+            <div class="loader"></div>
+
+        </div>
+
+        <div class="mt-10">
+
+            <canvas
+                id="canvas"
+                class="w-full rounded-3xl shadow-2xl bg-zinc-900">
+            </canvas>
+
+        </div>
+
+        <video
+            id="videoPlayer"
+            controls
+            class="hidden mt-10 rounded-3xl w-full shadow-2xl">
+        </video>
+
+        <div
+            id="downloadContainer"
+            class="mt-8">
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
