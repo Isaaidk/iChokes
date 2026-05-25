@@ -1,67 +1,94 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.services.video_service import process_video
+from app.services.image_service import process_image
+
 import shutil
 import uuid
-
-from app.services.image_service import process_image
+import os
 
 router = APIRouter()
 
 UPLOAD_DIR = "app/static/uploads/"
 OUTPUT_DIR = "app/static/outputs/"
 
+# Crear carpetas automáticamente
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 @router.post("/predict-image")
 async def predict_image_route(
     file: UploadFile = File(...)
 ):
 
-    file_id = str(uuid.uuid4())
+    try:
 
-    input_path = f"{UPLOAD_DIR}{file_id}.jpg"
+        file_id = str(uuid.uuid4())
 
-    output_path = f"{OUTPUT_DIR}{file_id}.jpg"
+        input_path = f"{UPLOAD_DIR}{file_id}.jpg"
 
-    with open(input_path, "wb") as buffer:
+        output_path = f"{OUTPUT_DIR}{file_id}.jpg"
 
-        shutil.copyfileobj(
-            file.file,
-            buffer
+        with open(input_path, "wb") as buffer:
+
+            shutil.copyfileobj(
+                file.file,
+                buffer
+            )
+
+        result = await process_image(
+            input_path,
+            output_path,
+            file_id
         )
 
-    result = await process_image(
-        input_path,
-        output_path,
-        file_id
-    )
+        return result
 
-    return result
+    except Exception as e:
+
+        print(f"[ERROR IMAGE] {str(e)}")
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 @router.post("/predict-video")
 async def predict_video_route(
     file: UploadFile = File(...)
 ):
 
-    file_id = str(uuid.uuid4())
+    try:
 
-    input_path = (
-        f"{UPLOAD_DIR}{file_id}.mp4"
-    )
+        file_id = str(uuid.uuid4())
 
-    output_path = (
-        f"{OUTPUT_DIR}{file_id}.mp4"
-    )
-
-    with open(input_path, "wb") as buffer:
-
-        shutil.copyfileobj(
-            file.file,
-            buffer
+        input_path = (
+            f"{UPLOAD_DIR}{file_id}.mp4"
         )
 
-    result = await process_video(
-        input_path,
-        output_path,
-        file_id
-    )
+        output_path = (
+            f"{OUTPUT_DIR}{file_id}.mp4"
+        )
 
-    return result
+        with open(input_path, "wb") as buffer:
+
+            shutil.copyfileobj(
+                file.file,
+                buffer
+            )
+
+        result = await process_video(
+            input_path,
+            output_path,
+            file_id
+        )
+
+        return result
+
+    except Exception as e:
+
+        print(f"[ERROR VIDEO] {str(e)}")
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
