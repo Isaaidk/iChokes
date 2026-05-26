@@ -11,11 +11,11 @@ from app.api.api import api_router
 # PATHS
 # =========================
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
+BASE_DIR = Path(__file__).resolve().parents[2]
 
-STATIC_DIR = ROOT_DIR / "backend" / "app" / "static"
+FRONTEND_DIR = BASE_DIR / "frontend"
 
-FRONTEND_DIR = ROOT_DIR / "frontend"
+STATIC_DIR = BASE_DIR / "backend" / "app" / "static"
 
 # =========================
 # APP
@@ -36,12 +36,6 @@ app.add_middleware(
 )
 
 # =========================
-# API ROUTES
-# =========================
-
-app.include_router(api_router)
-
-# =========================
 # STATIC FILES
 # =========================
 
@@ -52,23 +46,47 @@ app.mount(
 )
 
 # =========================
-# FRONTEND FILES
+# FRONTEND ASSETS
 # =========================
 
-@app.get("/app.js")
-async def get_app_js():
-    return FileResponse(
-        FRONTEND_DIR / "app.js"
-    )
+app.mount(
+    "/assets",
+    StaticFiles(directory=str(FRONTEND_DIR / "assets")),
+    name="assets"
+)
 
-@app.get("/styles.css")
-async def get_styles():
-    return FileResponse(
-        FRONTEND_DIR / "styles.css"
-    )
+# =========================
+# API ROUTES
+# =========================
+
+app.include_router(api_router)
+
+# =========================
+# FRONTEND INDEX
+# =========================
 
 @app.get("/")
 async def root():
+
     return FileResponse(
         FRONTEND_DIR / "index.html"
     )
+
+# =========================
+# FRONTEND FILES
+# =========================
+
+@app.get("/{file_name}")
+async def frontend_files(
+    file_name: str
+):
+
+    file_path = FRONTEND_DIR / file_name
+
+    if file_path.exists():
+
+        return FileResponse(file_path)
+
+    return {
+        "error": "File not found"
+    }
