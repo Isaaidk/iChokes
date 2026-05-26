@@ -52,16 +52,6 @@ app.mount(
 )
 
 # =========================
-# FRONTEND ASSETS
-# =========================
-
-app.mount(
-    "/assets",
-    StaticFiles(directory=str(FRONTEND_DIR / "assets")),
-    name="assets"
-)
-
-# =========================
 # FRONTEND FILES
 # =========================
 
