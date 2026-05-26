@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.api.api import api_router
 
@@ -11,7 +12,10 @@ from app.api.api import api_router
 # =========================
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-STATIC_DIR = ROOT_DIR / "app" / "static"
+
+STATIC_DIR = ROOT_DIR / "backend" / "app" / "static"
+
+FRONTEND_DIR = ROOT_DIR / "frontend"
 
 # =========================
 # APP
@@ -32,7 +36,13 @@ app.add_middleware(
 )
 
 # =========================
-# STATIC FILES (FIX REAL)
+# API ROUTES
+# =========================
+
+app.include_router(api_router)
+
+# =========================
+# STATIC FILES
 # =========================
 
 app.mount(
@@ -42,7 +52,33 @@ app.mount(
 )
 
 # =========================
-# ROUTES
+# FRONTEND ASSETS
 # =========================
 
-app.include_router(api_router)
+app.mount(
+    "/assets",
+    StaticFiles(directory=str(FRONTEND_DIR / "assets")),
+    name="assets"
+)
+
+# =========================
+# FRONTEND FILES
+# =========================
+
+@app.get("/app.js")
+async def get_app_js():
+    return FileResponse(
+        FRONTEND_DIR / "app.js"
+    )
+
+@app.get("/styles.css")
+async def get_styles():
+    return FileResponse(
+        FRONTEND_DIR / "styles.css"
+    )
+
+@app.get("/")
+async def root():
+    return FileResponse(
+        FRONTEND_DIR / "index.html"
+    )

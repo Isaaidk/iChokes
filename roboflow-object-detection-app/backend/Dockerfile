@@ -2,6 +2,10 @@ FROM python:3.12-slim
 
 WORKDIR /usr/src/app
 
+# =========================
+# SYSTEM DEPENDENCIES
+# =========================
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ffmpeg \
@@ -12,13 +16,43 @@ RUN apt-get update \
         libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# =========================
+# INSTALL PYTHON PACKAGES
+# =========================
 
-COPY . .
+COPY backend/requirements.txt ./backend/requirements.txt
 
-RUN mkdir -p app/static/uploads app/static/outputs
+RUN pip install --no-cache-dir -r ./backend/requirements.txt
+
+# =========================
+# COPY PROJECT
+# =========================
+
+COPY backend ./backend
+COPY frontend ./frontend
+
+# =========================
+# CREATE STATIC FOLDERS
+# =========================
+
+RUN mkdir -p /usr/src/app/backend/app/static/uploads
+
+RUN mkdir -p /usr/src/app/backend/app/static/outputs
+
+# =========================
+# PYTHON PATH
+# =========================
+
+ENV PYTHONPATH=/usr/src/app/backend
+
+# =========================
+# PORT
+# =========================
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# =========================
+# START APP
+# =========================
+
+CMD ["sh", "-c", "cd backend && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
