@@ -6,51 +6,107 @@ from app.services.roboflow_service import predict_image
 from app.utils.draw_utils import draw_detections
 
 
-async def process_video(input_path, output_path, filename):
+async def process_video(
+    input_path,
+    output_path,
+    filename
+):
 
     # =========================
-    # DIRECTORIOS
+    # DIRECTORIES
     # =========================
 
-    os.makedirs("app/static/uploads", exist_ok=True)
-    os.makedirs("app/static/outputs", exist_ok=True)
+    os.makedirs(
+        "backend/app/static/uploads",
+        exist_ok=True
+    )
 
-    temp_output = f"app/static/outputs/temp_{filename}.avi"
+    os.makedirs(
+        "backend/app/static/outputs",
+        exist_ok=True
+    )
 
     # =========================
-    # VIDEO INPUT
+    # TEMP FILE
+    # =========================
+
+    temp_output = (
+        f"backend/app/static/outputs/temp_{filename}.mp4"
+    )
+
+    # =========================
+    # OPEN VIDEO
     # =========================
 
     cap = cv2.VideoCapture(input_path)
 
     if not cap.isOpened():
-        raise Exception("Error opening video file")
 
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    if fps <= 0:
-        fps = 20
+        raise Exception(
+            "Error opening video file"
+        )
 
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    # =========================
+    # VIDEO INFO
+    # =========================
 
-    print(f"[VIDEO] FPS: {fps}")
+    original_fps = cap.get(
+        cv2.CAP_PROP_FPS
+    )
+
+    if original_fps <= 0:
+        original_fps = 20
+
+    width = int(
+        cap.get(
+            cv2.CAP_PROP_FRAME_WIDTH
+        )
+    )
+
+    height = int(
+        cap.get(
+            cv2.CAP_PROP_FRAME_HEIGHT
+        )
+    )
+
+    print(f"[VIDEO] FPS: {original_fps}")
     print(f"[VIDEO] SIZE: {width}x{height}")
 
     # =========================
-    # WRITER (MP4 COMPATIBLE BASE)
+    # SKIP FRAMES
     # =========================
 
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    FRAME_SKIP = 5
+
+    # 🔥 FIX:
+    # FPS REAL DEL VIDEO FINAL
+    output_fps = max(
+        original_fps / FRAME_SKIP,
+        1
+    )
+
+    print(f"[OUTPUT FPS] {output_fps}")
+
+    # =========================
+    # VIDEO WRITER
+    # =========================
+
+    fourcc = cv2.VideoWriter_fourcc(
+        *"mp4v"
+    )
 
     out = cv2.VideoWriter(
         temp_output,
         fourcc,
-        fps,
+        output_fps,
         (width, height)
     )
 
     if not out.isOpened():
-        raise Exception("Error creating video writer")
+
+        raise Exception(
+            "Error creating video writer"
+        )
 
     # =========================
     # PROCESS FRAMES
@@ -62,38 +118,67 @@ async def process_video(input_path, output_path, filename):
     while True:
 
         ret, frame = cap.read()
+
         if not ret:
             break
 
-        # 🔥 FIX IMPORTANTE: skip correcto
-        if frame_count % 5 != 0:
+        # =========================
+        # SKIP FRAMES
+        # =========================
+
+        if frame_count % FRAME_SKIP != 0:
+
             frame_count += 1
             continue
 
         print(f"[FRAME] {frame_count}")
 
-        temp_frame = f"app/static/uploads/frame_{frame_count}.jpg"
+        temp_frame = (
+            f"backend/app/static/uploads/frame_{frame_count}.jpg"
+        )
 
-        cv2.imwrite(temp_frame, frame)
+        # =========================
+        # SAVE TEMP FRAME
+        # =========================
+
+        cv2.imwrite(
+            temp_frame,
+            frame
+        )
 
         # =========================
         # INFERENCE
         # =========================
 
         try:
-            result = await predict_image(temp_frame)
-            predictions = result.get("predictions", [])
+
+            result = await predict_image(
+                temp_frame
+            )
+
+            predictions = result.get(
+                "predictions",
+                []
+            )
+
         except Exception as e:
+
             print(f"[ERROR INFERENCE] {e}")
+
             predictions = []
 
-        print(f"[PREDICTIONS] {len(predictions)}")
+        print(
+            f"[PREDICTIONS] {len(predictions)}"
+        )
 
         # =========================
-        # DRAW BOXES
+        # DRAW DETECTIONS
         # =========================
 
-        frame = draw_detections(frame, predictions)
+        frame = draw_detections(
+            frame,
+            predictions
+        )
 
         # =========================
         # WRITE FRAME
@@ -102,10 +187,11 @@ async def process_video(input_path, output_path, filename):
         out.write(frame)
 
         # =========================
-        # CLEAN TEMP FRAME
+        # DELETE TEMP FRAME
         # =========================
 
         if os.path.exists(temp_frame):
+
             os.remove(temp_frame)
 
         frame_count += 1
@@ -120,10 +206,12 @@ async def process_video(input_path, output_path, filename):
 
     cv2.destroyAllWindows()
 
-    print(f"[INFO] Video finished. Frames processed: {processed_frames}")
+    print(
+        f"[INFO] Frames processed: {processed_frames}"
+    )
 
     # =========================
-    # FINAL CONVERSION (SAFE FFMEG)
+    # FINAL FFMEG CONVERSION
     # =========================
 
     ffmpeg_command = [
@@ -131,40 +219,62 @@ async def process_video(input_path, output_path, filename):
         "-y",
         "-i",
         temp_output,
-        "-vcodec",
+
+        # 🔥 MOBILE SAFE
+        "-c:v",
         "libx264",
+
         "-preset",
-        "ultrafast",
+        "fast",
+
         "-pix_fmt",
         "yuv420p",
+
         "-movflags",
         "+faststart",
+
+        "-profile:v",
+        "baseline",
+
+        "-level",
+        "3.0",
+
         output_path
     ]
 
-    result = subprocess.run(
+    process = subprocess.run(
         ffmpeg_command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
 
-    print(result.stderr.decode())
+    print(process.stderr.decode())
 
     # =========================
-    # VALIDATION
+    # VALIDATE OUTPUT
     # =========================
 
     if not os.path.exists(output_path):
-        raise Exception("FFmpeg failed to generate output video")
+
+        raise Exception(
+            "FFmpeg failed to generate output video"
+        )
 
     # =========================
-    # CLEAN TEMP
+    # DELETE TEMP VIDEO
     # =========================
 
     if os.path.exists(temp_output):
+
         os.remove(temp_output)
 
+    # =========================
+    # RESPONSE
+    # =========================
+
     return {
+
         "success": True,
+
         "video_url": f"/static/outputs/{filename}.mp4"
     }
