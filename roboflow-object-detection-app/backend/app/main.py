@@ -38,12 +38,12 @@ app.add_middleware(
 # =========================
 # STATIC OUTPUTS
 # =========================
-
+print(f"[STATIC DIR] {STATIC_DIR}")
 app.mount(
     "/static",
     StaticFiles(directory=str(STATIC_DIR)),
     name="static"
-    print(f"[STATIC DIR] {STATIC_DIR}")
+    
 )
 
 # =========================
