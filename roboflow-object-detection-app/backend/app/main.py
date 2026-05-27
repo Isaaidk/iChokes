@@ -43,6 +43,7 @@ app.mount(
     "/static",
     StaticFiles(directory=str(STATIC_DIR)),
     name="static"
+    print(f"[STATIC DIR] {STATIC_DIR}")
 )
 
 # =========================
@@ -84,3 +85,4 @@ async def styles():
     return FileResponse(
         str(FRONTEND_DIR / "styles.css")
     )
+

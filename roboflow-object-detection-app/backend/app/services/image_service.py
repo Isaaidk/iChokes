@@ -1,86 +1,92 @@
 import cv2
-import os
+from pathlib import Path
 
 from app.services.roboflow_service import predict_image
 from app.utils.draw_utils import draw_detections
 
 
-async def process_image(input_path, output_path, filename):
+async def process_image(
+    input_path,
+    output_path,
+    filename
+):
 
-    try:
+    # =========================
+    # PATHS ABSOLUTOS
+    # =========================
 
-        # =========================
-        # DIRECTORIOS SEGURIDAD
-        # =========================
+    BASE_DIR = Path(__file__).resolve().parent.parent
 
-        os.makedirs("app/static/uploads", exist_ok=True)
-        os.makedirs("app/static/outputs", exist_ok=True)
+    outputs_dir = BASE_DIR / "static" / "outputs"
 
-        # =========================
-        # VALIDAR INPUT
-        # =========================
+    outputs_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
-        if not os.path.exists(input_path):
-            raise Exception(f"Input image not found: {input_path}")
+    absolute_output = outputs_dir / f"{filename}.jpg"
 
-        # =========================
-        # LEER IMAGEN
-        # =========================
+    # =========================
+    # LEER IMAGEN
+    # =========================
 
-        image = cv2.imread(input_path)
+    image = cv2.imread(str(input_path))
 
-        if image is None:
-            raise Exception("cv2 failed to read image (invalid file or format)")
+    if image is None:
 
-        print(f"[IMAGE] Loaded: {input_path}")
+        raise Exception(
+            "Failed to read image"
+        )
 
-        # =========================
-        # INFERENCIA (ROBUSTA)
-        # =========================
+    # =========================
+    # INFERENCIA
+    # =========================
 
-        try:
-            result = await predict_image(input_path)
-            predictions = result.get("predictions", [])
-        except Exception as e:
-            print(f"[ROBoflow ERROR] {e}")
-            predictions = []
+    result = await predict_image(
+        input_path
+    )
 
-        print(f"[PREDICTIONS] {len(predictions)}")
+    predictions = result.get(
+        "predictions",
+        []
+    )
 
-        # =========================
-        # DRAW DETECTIONS
-        # =========================
+    # =========================
+    # DIBUJAR
+    # =========================
 
-        image = draw_detections(image, predictions)
+    image = draw_detections(
+        image,
+        predictions
+    )
 
-        # =========================
-        # SAVE OUTPUT
-        # =========================
+    # =========================
+    # GUARDAR
+    # =========================
 
-        success = cv2.imwrite(output_path, image)
+    success = cv2.imwrite(
+        str(absolute_output),
+        image
+    )
 
-        if not success:
-            raise Exception("Failed to save output image (cv2.imwrite failed)")
+    if not success:
 
-        print(f"[OUTPUT] Saved: {output_path}")
+        raise Exception(
+            "Failed saving image"
+        )
 
-        # =========================
-        # FINAL VALIDATION
-        # =========================
+    print(f"[OUTPUT SAVED] {absolute_output}")
 
-        if not os.path.exists(output_path):
-            raise Exception("Output file not created")
+    # =========================
+    # RESPONSE
+    # =========================
 
-        # =========================
-        # RESPONSE
-        # =========================
+    return {
 
-        return {
-            "success": True,
-            "predictions": predictions,
-            "output_path": f"/static/outputs/{filename}.jpg"
-        }
+        "success": True,
 
-    except Exception as e:
-        print(f"[PROCESS IMAGE ERROR] {str(e)}")
-        raise Exception(str(e))
+        "predictions": predictions,
+
+        "output_path":
+            f"/static/outputs/{filename}.jpg"
+    }
