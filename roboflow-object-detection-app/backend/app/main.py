@@ -8,14 +8,14 @@ from fastapi.responses import FileResponse
 from app.api.api import api_router
 
 # =========================
-# PATHS
+# PATHS REALES
 # =========================
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
+BASE_DIR = Path(__file__).resolve().parent
 
-STATIC_DIR = ROOT_DIR / "backend" / "app" / "static"
+STATIC_DIR = BASE_DIR / "static"
 
-FRONTEND_DIR = ROOT_DIR / "frontend"
+FRONTEND_DIR = BASE_DIR.parents[2] / "frontend"
 
 # =========================
 # APP
@@ -46,7 +46,7 @@ app.mount(
 )
 
 # =========================
-# FRONTEND FILES
+# FRONTEND ASSETS
 # =========================
 
 app.mount(
@@ -62,26 +62,23 @@ app.mount(
 app.include_router(api_router)
 
 # =========================
-# FRONTEND ROUTE
+# FRONTEND
 # =========================
 
 @app.get("/")
 async def root():
-
     return FileResponse(
         str(FRONTEND_DIR / "index.html")
     )
 
 @app.get("/app.js")
 async def js():
-
     return FileResponse(
         str(FRONTEND_DIR / "app.js")
     )
 
 @app.get("/styles.css")
 async def css():
-
     return FileResponse(
         str(FRONTEND_DIR / "styles.css")
     )

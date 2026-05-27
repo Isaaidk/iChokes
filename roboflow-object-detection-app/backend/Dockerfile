@@ -12,17 +12,20 @@ RUN apt-get update \
         libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt requirements.txt
+COPY backend/requirements.txt ./requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY backend ./backend
+COPY frontend ./frontend
 
-RUN mkdir -p backend/app/static/uploads
-RUN mkdir -p backend/app/static/outputs
+RUN mkdir -p /usr/src/app/backend/app/static/uploads
+RUN mkdir -p /usr/src/app/backend/app/static/outputs
+
+WORKDIR /usr/src/app/backend
 
 ENV PYTHONPATH=/usr/src/app/backend
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
