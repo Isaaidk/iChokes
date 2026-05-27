@@ -13,32 +13,60 @@ async def process_video(
 ):
 
     # =========================
-    # DIRECTORIES
+    # BASE DIR
+    # =========================
+
+    BASE_DIR = os.getcwd()
+
+    UPLOAD_DIR = os.path.join(
+        BASE_DIR,
+        "backend/app/static/uploads"
+    )
+
+    OUTPUT_DIR = os.path.join(
+        BASE_DIR,
+        "backend/app/static/outputs"
+    )
+
+    # =========================
+    # CREATE DIRECTORIES
     # =========================
 
     os.makedirs(
-        "backend/app/static/uploads",
+        UPLOAD_DIR,
         exist_ok=True
     )
 
     os.makedirs(
-        "backend/app/static/outputs",
+        OUTPUT_DIR,
         exist_ok=True
     )
 
     # =========================
-    # TEMP FILE
+    # TEMP OUTPUT
     # =========================
 
-    temp_output = (
-        f"backend/app/static/outputs/temp_{filename}.mp4"
+    temp_output = os.path.join(
+        OUTPUT_DIR,
+        f"temp_{filename}.mp4"
+    )
+
+    # =========================
+    # FINAL OUTPUT
+    # =========================
+
+    final_output = os.path.join(
+        OUTPUT_DIR,
+        f"{filename}.mp4"
     )
 
     # =========================
     # OPEN VIDEO
     # =========================
 
-    cap = cv2.VideoCapture(input_path)
+    cap = cv2.VideoCapture(
+        input_path
+    )
 
     if not cap.isOpened():
 
@@ -73,13 +101,11 @@ async def process_video(
     print(f"[VIDEO] SIZE: {width}x{height}")
 
     # =========================
-    # SKIP FRAMES
+    # FRAME SKIP
     # =========================
 
     FRAME_SKIP = 5
 
-    # 🔥 FIX:
-    # FPS REAL DEL VIDEO FINAL
     output_fps = max(
         original_fps / FRAME_SKIP,
         1
@@ -133,8 +159,9 @@ async def process_video(
 
         print(f"[FRAME] {frame_count}")
 
-        temp_frame = (
-            f"backend/app/static/uploads/frame_{frame_count}.jpg"
+        temp_frame = os.path.join(
+            UPLOAD_DIR,
+            f"frame_{frame_count}.jpg"
         )
 
         # =========================
@@ -202,25 +229,36 @@ async def process_video(
     # =========================
 
     cap.release()
+
     out.release()
 
     cv2.destroyAllWindows()
 
     print(
-        f"[INFO] Frames processed: {processed_frames}"
+        f"[INFO] Video finished. Frames processed: {processed_frames}"
     )
 
     # =========================
-    # FINAL FFMEG CONVERSION
+    # VALIDATE TEMP VIDEO
+    # =========================
+
+    if not os.path.exists(temp_output):
+
+        raise Exception(
+            "Temporary video was not created"
+        )
+
+    # =========================
+    # FFMPEG CONVERSION
     # =========================
 
     ffmpeg_command = [
         "ffmpeg",
         "-y",
+
         "-i",
         temp_output,
 
-        # 🔥 MOBILE SAFE
         "-c:v",
         "libx264",
 
@@ -239,7 +277,7 @@ async def process_video(
         "-level",
         "3.0",
 
-        output_path
+        final_output
     ]
 
     process = subprocess.run(
@@ -248,17 +286,20 @@ async def process_video(
         stderr=subprocess.PIPE
     )
 
+    print(process.stdout.decode())
     print(process.stderr.decode())
 
     # =========================
-    # VALIDATE OUTPUT
+    # VALIDATE FINAL VIDEO
     # =========================
 
-    if not os.path.exists(output_path):
+    if not os.path.exists(final_output):
 
         raise Exception(
             "FFmpeg failed to generate output video"
         )
+
+    print(f"[OUTPUT] Saved: {final_output}")
 
     # =========================
     # DELETE TEMP VIDEO
